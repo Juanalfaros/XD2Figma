@@ -113,7 +113,7 @@ pub fn convert_file(
             let mut asset = document.open_asset(id)?;
             zip.start_file(
                 format!("assets/{id}"),
-                stored.large_file(asset.metadata()?.len() > u32::MAX.into()),
+                stored.large_file(asset.metadata()?.len() > u64::from(u32::MAX)),
             )?;
             io::copy(&mut asset, &mut zip)?;
         }

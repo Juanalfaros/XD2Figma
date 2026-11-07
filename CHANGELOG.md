@@ -3,6 +3,15 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 El proyecto sigue [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.5.1] - 2026-11-07
+
+### Corregido
+
+- Compilación de escritorio en Linux: límite ZIP64 convertido explícitamente a u64 para evitar ambigüedad con GLib.
+- Runner de macOS actualizado a macos-15 tras el retiro de macos-14.
+- Publicación de los instaladores exitosos aunque falle otra plataforma.
+- Acciones de GitHub actualizadas y caché de compilación Rust.
+
 ## [0.5.0] - 2026-11-07
 
 ### Cambiado

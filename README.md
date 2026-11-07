@@ -6,9 +6,9 @@ Aplicación de escritorio que convierte archivos Adobe XD en archivos .fig con c
 
 Las versiones y sus instaladores se publican en [GitHub Releases](https://github.com/Juanalfaros/XD2Figma/releases). Cada archivo incluye su suma SHA-256. El workflow de tags `v*` compila macOS Apple Silicon, Windows x64 (MSI y EXE) y Linux x64 (AppImage y DEB). Consulta los archivos adjuntos y el estado de Actions para comprobar cuáles están disponibles en cada versión.
 
-## Instalar XD2Figma 0.5.0 en macOS
+## Instalar XD2Figma 0.5.1 en macOS
 
-Abre `XD2Figma_0.5.0_aarch64.dmg`, disponible en la raíz del proyecto, y arrastra **XD2Figma** a **Aplicaciones**. Si ya tienes instalada una versión anterior, cierra la aplicación antes de reemplazarla. La versión se muestra al pie de la navegación lateral.
+Abre `XD2Figma_0.5.1_aarch64.dmg`, disponible en la raíz del proyecto, y arrastra **XD2Figma** a **Aplicaciones**. Si ya tienes instalada una versión anterior, cierra la aplicación antes de reemplazarla. La versión se muestra al pie de la navegación lateral.
 
 La interfaz implementa la [propuesta 4 — Dashboard guiado](https://www.figma.com/design/ijSjjmuOohgwfYuYrnh5Ev?node-id=8-206). Usa **Conversiones** para seguir los pasos **Importar → Configurar → Convertir → Revisar**. El resumen lateral mantiene visibles el formato, el destino y el estado del lote.
 
@@ -27,7 +27,7 @@ cargo tauri dev
 cargo tauri build
 ```
 
-También puedes usar `pnpm tauri dev` y `pnpm tauri build`. En macOS, `pnpm package:mac` crea y verifica un DMG en la raíz del proyecto, con fondo Retina propio, posiciones fijas de los iconos y un acceso a Aplicaciones. La ventana se configura mediante `.DS_Store`, sin automatizar Finder. Requiere Python 3.9 o posterior y las herramientas de línea de comandos de Xcode; las dependencias de empaquetado se instalan en un entorno aislado bajo `src-tauri/target`. Para cambiar solo el diseño del instalador conservando la app compilada y verificada de la misma versión, usa `pnpm package:mac --reuse-app`. La vista previa se genera en `src-tauri/target/dmg-artwork/preview.png`. Los tags `v*` disparan GitHub Actions, conservan los instaladores como artefactos y los adjuntan a la release correspondiente.
+También puedes usar `pnpm tauri dev` y `pnpm tauri build`. En macOS, `pnpm package:mac` crea y verifica un DMG en la raíz del proyecto, con fondo Retina propio, posiciones fijas de los iconos y un acceso a Aplicaciones. La ventana se configura mediante `.DS_Store`, sin automatizar Finder. Requiere Python 3.9 o posterior y las herramientas de línea de comandos de Xcode; las dependencias de empaquetado se instalan en un entorno aislado bajo `src-tauri/target`. Para cambiar solo el diseño del instalador conservando la app compilada y verificada de la misma versión, usa `pnpm package:mac --reuse-app`. La vista previa se genera en `src-tauri/target/dmg-artwork/preview.png`. Los tags `v*` disparan GitHub Actions, conservan los instaladores como artefactos y los adjuntan a la release correspondiente. Si una plataforma falla, se publican las que hayan terminado correctamente; el fallo sigue visible en Actions.
 
 ## Del XD al .fig
 

@@ -16,12 +16,13 @@ jobs:
   package:
     name: Package ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: macOS-AppleSilicon
-            runner: macos-14
+            runner: macos-15
             bundle: dmg
           - name: Windows-x64
             runner: windows-latest
@@ -30,16 +31,19 @@ jobs:
             runner: ubuntu-24.04
             bundle: appimage,deb
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: pnpm/action-setup@v6.1.1
         with:
           version: 10
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: '22'
           cache: pnpm
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-python@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.12'
       - name: Validate release version
@@ -75,7 +79,7 @@ jobs:
               shutil.copy2(source, target)
               digest = hashlib.sha256(target.read_bytes()).hexdigest()
               target.with_name(target.name + '.sha256').write_text(f'{digest}  {target.name}\n')
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7.0.2
         with:
           name: xd2figma-${{ github.ref_name }}-${{ matrix.name }}
           path: release-assets/*
@@ -84,12 +88,12 @@ jobs:
   publish:
     name: Attach installers to GitHub Release
     needs: package
-    if: startsWith(github.ref, 'refs/tags/')
+    if: always() && !cancelled() && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8.0.2
         with:
           pattern: xd2figma-${{ github.ref_name }}-*
           path: release-assets

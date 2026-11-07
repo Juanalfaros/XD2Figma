@@ -1,0 +1,104 @@
+name: Build desktop release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: Package ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS-AppleSilicon
+            runner: macos-14
+            bundle: dmg
+          - name: Windows-x64
+            runner: windows-latest
+            bundle: msi,nsis
+          - name: Linux-x64
+            runner: ubuntu-24.04
+            bundle: appimage,deb
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate release version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: node -e 'if (process.env.GITHUB_REF_NAME !== "v" + require("./package.json").version) process.exit(1)'
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2t64
+      - run: pnpm install --frozen-lockfile
+      - run: cargo test --locked --manifest-path src-tauri/Cargo.toml --no-default-features --test conversion_test
+      - name: Package custom macOS installer
+        if: runner.os == 'macOS'
+        run: pnpm package:mac
+      - name: Package Windows or Linux
+        if: runner.os != 'macOS'
+        run: pnpm tauri build --bundles ${{ matrix.bundle }} -- --locked
+      - name: Collect installers and checksums
+        shell: python
+        run: |
+          import hashlib, pathlib, shutil
+          output = pathlib.Path('release-assets')
+          output.mkdir(exist_ok=True)
+          files = list(pathlib.Path('.').glob('XD2Figma_*.dmg'))
+          bundle = pathlib.Path('src-tauri/target/release/bundle')
+          files += [p for p in bundle.rglob('*') if p.is_file() and p.suffix in {'.msi', '.exe', '.AppImage', '.deb'}]
+          if not files:
+              raise SystemExit('No installers generated')
+          for source in files:
+              target = output / source.name
+              shutil.copy2(source, target)
+              digest = hashlib.sha256(target.read_bytes()).hexdigest()
+              target.with_name(target.name + '.sha256').write_text(f'{digest}  {target.name}\n')
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xd2figma-${{ github.ref_name }}-${{ matrix.name }}
+          path: release-assets/*
+          if-no-files-found: error
+
+  publish:
+    name: Attach installers to GitHub Release
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: xd2figma-${{ github.ref_name }}-*
+          path: release-assets
+          merge-multiple: true
+      - name: Create release if needed and attach installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --verify-tag --title "XD2Figma $RELEASE_TAG" --generate-notes
+          gh release upload "$RELEASE_TAG" release-assets/* --clobber

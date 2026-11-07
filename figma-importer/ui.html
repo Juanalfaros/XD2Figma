@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<style>
+body { font: 13px system-ui; color: var(--figma-color-text); background: var(--figma-color-bg); margin: 16px }
+pre { white-space: pre-wrap; overflow-wrap: anywhere }
+</style>
+<h2>Importar XD2Figma</h2>
+<p>Selecciona la carpeta extraída del ZIP. El importador crea capas editables en la página actual.</p>
+<input id="folder" type="file" webkitdirectory aria-label="Carpeta del paquete">
+<pre id="log" role="status"></pre>
+<script>
+const folder = document.querySelector('#folder');
+const log = document.querySelector('#log');
+const send = (message) => parent.postMessage({ pluginMessage: message }, '*');
+let files;
+folder.onchange = async () => {
+  try {
+    files = new Map(Array.from(folder.files, f => [f.webkitRelativePath.split('/').slice(1).join('/'), f]));
+    const design = files.get('design.json');
+    if (!design) throw new Error('Selecciona la carpeta que contiene design.json.');
+    folder.disabled = true;
+    log.textContent = 'Importando…';
+    send({ type: 'import', design: JSON.parse(await design.text()) });
+  } catch (error) {
+    log.textContent = String(error);
+    folder.disabled = false;
+  }
+};
+window.onmessage = async ({ data }) => {
+  const message = data?.pluginMessage;
+  if (message?.type === 'asset') {
+    try {
+      const file = files?.get('assets/' + message.id);
+      if (!file) throw new Error('Recurso ausente: ' + message.id);
+      let bytes = await file.arrayBuffer();
+      // Figma limits image dimensions. Resize only assets above that limit.
+      const bitmap = await createImageBitmap(file);
+      const header = new Uint8Array(bytes, 0, Math.min(12, bytes.byteLength));
+      const supported = header[0] === 0x89 || (header[0] === 0xff && header[1] === 0xd8)
+        || (header[0] === 0x47 && header[1] === 0x49 && header[2] === 0x46);
+      if (!supported || bitmap.width > 4096 || bitmap.height > 4096) {
+        const scale = Math.min(1, 4096 / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const encoded = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        bytes = await encoded.arrayBuffer();
+      }
+      bitmap.close();
+      send({ type: 'asset', request: message.request, bytes });
+    } catch (error) { send({ type: 'asset', request: message.request, error: String(error) }); }
+  } else if (message?.type === 'log') {
+    log.textContent += '\n' + message.text;
+  } else if (message?.type === 'done') {
+    folder.disabled = false;
+    log.textContent += '\n' + message.text;
+  }
+};
+</script>
+</html>

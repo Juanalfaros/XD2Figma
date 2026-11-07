@@ -1,0 +1,30 @@
+node_modules/
+dist/
+target/
+.vite/
+.DS_Store
+*.log
+.env*
+!.env.example
+*.xd2figma.zip
+.xd2figma-*
+*.xd
+
+/src-tauri/gen/schemas/
+
+*.fig
+
+# Capturas y resultados de pruebas de interfaz
+test-results/
+playwright-report/
+
+# Instaladores se distribuyen mediante GitHub Releases
+*.dmg
+*.msi
+*.exe
+*.AppImage
+*.deb
+*.rpm
+*.sha256
+__pycache__/
+*.pyc

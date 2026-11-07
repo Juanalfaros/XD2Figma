@@ -1,0 +1,34 @@
+[package]
+name = "xd2figma"
+version = "0.5.0"
+edition = "2021"
+description = "Conversor local de Adobe XD a SVG y JSON"
+
+[features]
+default = ["desktop"]
+desktop = ["dep:tauri", "dep:tauri-plugin-dialog"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[[bin]]
+name = "xd2figma"
+path = "src/main.rs"
+required-features = ["desktop"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+figcraft-doc = { git = "https://github.com/storytold/figcraft.git", rev = "8eb0b87646c5aef712326d6c431ccde5408630de" }
+figcraft-format = { git = "https://github.com/storytold/figcraft.git", rev = "8eb0b87646c5aef712326d6c431ccde5408630de" }
+svgtypes = "0.16"
+fontdb = "0.23"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tempfile = "3"
+zip = { version = "4", default-features = false, features = ["deflate"] }
+tauri = { version = "2", optional = true , features = [] }
+tauri-plugin-dialog = { version = "2", optional = true }
+
+[dev-dependencies]
+quick-xml = "0.42"

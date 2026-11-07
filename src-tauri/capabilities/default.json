@@ -1,0 +1,6 @@
+{
+  "identifier": "main",
+  "description": "Selección local de archivos y recepción de progreso",
+  "windows": ["main"],
+  "permissions": ["core:default", "dialog:allow-open", "core:window:allow-set-theme"]
+}

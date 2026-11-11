@@ -38,6 +38,25 @@ pub fn convert_file(
     options: Options,
     progress: impl FnMut(Progress),
 ) -> Result<Report, String> {
+    convert_file_cancellable(source, destination, options, &|| false, progress)
+}
+
+/// Igual que `convert_file`; consulta `cancelled` entre fases y mientras recorre capas.
+/// Al cancelar devuelve `converter::CANCELLED` sin dejar archivos a medias.
+pub fn convert_file_cancellable(
+    source: &Path,
+    destination: &Path,
+    options: Options,
+    cancelled: &dyn Fn() -> bool,
+    progress: impl FnMut(Progress),
+) -> Result<Report, String> {
+    let check = || {
+        if cancelled() {
+            Err(converter::CANCELLED.to_owned())
+        } else {
+            Ok(())
+        }
+    };
     if !source
         .extension()
         .and_then(|s| s.to_str())
@@ -58,11 +77,13 @@ pub fn convert_file(
     let extracted = Extracted::open(source, |index, total, name| {
         event(
             (25 * index / total.max(1)) as u8,
-            "Descomprimiendo",
+            "Leyendo contenedor",
             name,
             None,
         );
+        check()
     })?;
+    check()?;
     let mut parse_warnings = Vec::new();
     let document = extracted.parse(
         options.strict,
@@ -72,6 +93,7 @@ pub fn convert_file(
             parse_warnings.push(warning);
         },
     )?;
+    check()?;
     let count = document
         .boards
         .iter()
@@ -86,14 +108,16 @@ pub fn convert_file(
     let mut board_index = 0;
     let mut percent = 40;
     event(percent, "Mapeando nodos", "", None);
-    let mut design = converter::convert_with_progress(&document, options, |element, warning| {
-        if warning.is_none() {
-            percent = 40 + (30 * board_index / count) as u8;
-            board_index += 1;
-        }
-        event(percent, "Mapeando nodos", element, warning);
-    })?;
+    let mut design =
+        converter::convert_cancellable(&document, options, cancelled, |element, warning| {
+            if warning.is_none() {
+                percent = 40 + (30 * board_index / count) as u8;
+                board_index += 1;
+            }
+            event(percent, "Mapeando nodos", element, warning);
+        })?;
     design.summary.warnings.extend(parse_warnings);
+    check()?;
     let mut temp = Builder::new()
         .prefix(".xd2figma-")
         .tempfile_in(destination)
@@ -137,6 +161,7 @@ pub fn convert_file(
         "xd2figma.zip"
     } else {
         event(75, "Codificando .fig", "", None);
+        check()?;
         let (bytes, warnings) = native::export(&design, &document)?;
         for warning in warnings {
             if design.summary.warnings.insert(warning.clone()) {

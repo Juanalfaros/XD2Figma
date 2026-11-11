@@ -10,6 +10,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use style::Appearance;
 use vector::VectorNetwork;
 
+/// Mensaje con el que se señala una conversión cancelada por el usuario.
+pub const CANCELLED: &str = "Conversión cancelada";
+const MAX_NODES: usize = 100_000;
+
 #[derive(Clone, Copy, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Options {
@@ -147,6 +151,7 @@ struct Mapping<'a> {
     gradients: &'a Value,
     summary: Summary,
     notify: &'a mut dyn FnMut(&str, Option<&str>),
+    cancelled: &'a dyn Fn() -> bool,
     visited: usize,
     fonts: BTreeSet<String>,
 }
@@ -160,8 +165,13 @@ impl Mapping<'_> {
 
     fn node(&mut self, source: &Value, reference_depth: u8) -> Result<Node, String> {
         self.visited += 1;
-        if self.visited > 100_000 {
-            return Err("El árbol expandido supera 100.000 nodos".into());
+        if self.visited > MAX_NODES {
+            return Err(format!(
+                "El árbol expandido supera {MAX_NODES} nodos; divide el diseño en archivos más pequeños"
+            ));
+        }
+        if self.visited.is_multiple_of(256) && (self.cancelled)() {
+            return Err(CANCELLED.into());
         }
         let xd_type = string(&source["type"]);
         let name = source["name"].as_str().unwrap_or(xd_type);
@@ -384,6 +394,16 @@ pub fn convert(document: &Document, options: Options) -> Result<Design, String> 
 pub fn convert_with_progress(
     document: &Document,
     options: Options,
+    notify: impl FnMut(&str, Option<&str>),
+) -> Result<Design, String> {
+    convert_cancellable(document, options, &|| false, notify)
+}
+
+/// Igual que `convert_with_progress`, pero consulta `cancelled` mientras recorre el árbol.
+pub fn convert_cancellable(
+    document: &Document,
+    options: Options,
+    cancelled: &dyn Fn() -> bool,
     mut notify: impl FnMut(&str, Option<&str>),
 ) -> Result<Design, String> {
     let mut artboards = Vec::new();
@@ -406,6 +426,7 @@ pub fn convert_with_progress(
         gradients: &resources["gradients"],
         summary: Summary::default(),
         notify: &mut notify,
+        cancelled,
         visited: 0,
         fonts,
     };

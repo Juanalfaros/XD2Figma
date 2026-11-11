@@ -1,13 +1,18 @@
 [package]
 name = "xd2figma"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
-description = "Conversor local de Adobe XD a SVG y JSON"
+description = "Conversor local de Adobe XD a archivos .fig editables de Figma"
+default-run = "xd2figma"
 
 [features]
 default = ["desktop"]
 desktop = ["dep:tauri", "dep:tauri-plugin-dialog"]
 custom-protocol = ["tauri/custom-protocol"]
+
+[[bin]]
+name = "xd2figma-cli"
+path = "src/bin/cli.rs"
 
 [[bin]]
 name = "xd2figma"

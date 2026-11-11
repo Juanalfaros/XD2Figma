@@ -2,11 +2,20 @@ import { useEffect, useRef, useState } from 'react';
 import { Channel, invoke, isTauri } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
-import { open } from '@tauri-apps/plugin-dialog';
+import { open, save } from '@tauri-apps/plugin-dialog';
 
 export const native = isTauri();
 export const basename = (path) => path?.split(/[/\\]/).pop() || path;
 export const defaults = { keepComponents: true, preservePrototype: false, repeatGridAutoLayout: true, extractImages: false, strict: false, importPackage: false };
+const HISTORY_KEY = 'xd2figma-history';
+const HISTORY_LIMIT = 50;
+const CANCELLED = 'Conversión cancelada';
+function savedHistory() {
+  try {
+    const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    return Array.isArray(list) ? list.filter(f => f?.path && f.report?.outputPath && f.report.summary).slice(-HISTORY_LIMIT) : [];
+  } catch { return []; }
+}
 function saved() {
   try { return JSON.parse(localStorage.getItem('xd2figma-preferences') || '{}') || {}; } catch { return {}; }
 }
@@ -17,7 +26,7 @@ export function useConversion() {
   const [options, setOptions] = useState(() => Object.fromEntries(Object.entries(defaults).map(([k, v]) => [k, typeof saved().options?.[k] === 'boolean' ? saved().options[k] : v])));
   const [destination, setDestination] = useState(() => typeof saved().destination === 'string' ? saved().destination : null);
   const [files, setFiles] = useState([]);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState(savedHistory);
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState('conversion');
   const [step, setStep] = useState(0);
@@ -38,6 +47,9 @@ export function useConversion() {
   useEffect(() => {
     try { localStorage.setItem('xd2figma-preferences', JSON.stringify({ options, destination })); } catch {}
   }, [options, destination]);
+  useEffect(() => {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-HISTORY_LIMIT))); } catch {}
+  }, [history]);
   function enqueue(paths) {
     // A native conversion owns its batch until it finishes, including drag/drop.
     if (lock.current) { setError('Espera a que termine el lote para añadir archivos.'); return; }
@@ -100,7 +112,10 @@ export function useConversion() {
           update(file.path, result);
           setHistory(current => [...current.filter(f => f.path !== file.path), result]);
           setSelected(file.path);
-        } catch (e) { update(file.path, { status: 'error', message: String(e) }); log(file.path, String(e), 'error'); }
+        } catch (e) {
+          if (String(e) === CANCELLED) update(file.path, { status: 'waiting', percent: 0, phase: '', element: '', message: '' });
+          else { update(file.path, { status: 'error', message: String(e) }); log(file.path, String(e), 'error'); }
+        }
       }
     } catch (e) { setError(String(e)); }
     finally { lock.current = false; setRunning(false); setStopping(false); if (started) setStep(3); }
@@ -111,7 +126,17 @@ export function useConversion() {
   return { theme, setTheme, options, setOptions, destination, files, history, selected, setSelected, view, setView, step, setStep,
     running, stopping, picker, dragging, error, setError, logs, setLogs, drawerOpen, setDrawerOpen, active, pending, result,
     busy: running || Boolean(picker), chooseFiles, chooseDestination, convert,
-    stopBatch() { stop.current = true; setStopping(true); },
+    stopBatch() { stop.current = true; setStopping(true); invoke('cancel_conversion').catch(console.warn); },
+    clearHistory() { setHistory([]); setSelected(null); },
+    async exportLog() {
+      if (!native || !logs.length) return;
+      try {
+        const path = await save({ defaultPath: 'xd2figma-registro.txt', filters: [{ name: 'Texto', extensions: ['txt'] }] });
+        if (!path) return;
+        const text = logs.map(l => `${new Date(l.time).toISOString()} [${l.level}] ${basename(l.path)}: ${l.message}`).join('\n') + '\n';
+        await invoke('save_log', { path, contents: text });
+      } catch (e) { setError(String(e)); }
+    },
     remove(path) { if (lock.current) return; setFiles(current => current.filter(f => f.path !== path)); },
     newSession() { if (lock.current) return; setFiles([]); setSelected(null); setStep(0); setView('conversion'); setError(''); },
     reveal(path) { invoke('reveal_output', { path }).catch(e => setError(String(e))); },

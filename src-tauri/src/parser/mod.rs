@@ -2,15 +2,16 @@ use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::Value;
 use std::{
+    cell::RefCell,
     collections::BTreeMap,
-    fs::File,
+    fs::{self, File},
     io::{self, Read},
     path::{Path, PathBuf},
 };
 use tempfile::TempDir;
 use zip::ZipArchive;
 
-const MAX_JSON: u64 = 32 * 1024 * 1024;
+const MAX_JSON: u64 = 128 * 1024 * 1024;
 const MAX_EXPANDED: u64 = 8 * 1024 * 1024 * 1024;
 const MAX_ENTRIES: usize = 100_000;
 
@@ -27,22 +28,28 @@ pub struct Graphics {
 pub struct Extracted {
     directory: TempDir,
     entries: BTreeMap<String, usize>,
+    archive: RefCell<ZipArchive<File>>,
 }
 
 impl Extracted {
-    pub fn open(path: &Path, mut progress: impl FnMut(usize, usize, &str)) -> Result<Self, String> {
+    /// Valida el contenedor sin descomprimirlo: cada entrada se extrae a disco
+    /// solo cuando alguien la necesita (JSON de capas o un recurso usado).
+    pub fn open(
+        path: &Path,
+        mut progress: impl FnMut(usize, usize, &str) -> Result<(), String>,
+    ) -> Result<Self, String> {
         let file = File::open(path).map_err(|e| format!("No se pudo abrir el XD: {e}"))?;
         let mut archive =
             ZipArchive::new(file).map_err(|e| format!("Contenedor XD inválido: {e}"))?;
         let directory = tempfile::tempdir().map_err(|e| e.to_string())?;
         let mut entries = BTreeMap::new();
-        let mut remaining = MAX_EXPANDED;
+        let mut declared: u64 = 0;
         let total = archive.len();
         if total > MAX_ENTRIES {
             return Err("El contenedor XD tiene demasiadas entradas".into());
         }
         for index in 0..total {
-            let mut entry = archive.by_index(index).map_err(|e| e.to_string())?;
+            let entry = archive.by_index(index).map_err(|e| e.to_string())?;
             if entry.is_dir() {
                 continue;
             }
@@ -60,38 +67,56 @@ impl Extracted {
             if entries.insert(name.clone(), index).is_some() {
                 return Err(format!("Entrada XD duplicada: {name}"));
             }
-            progress(index, total, &name);
-            if entry.size() > remaining {
-                return Err("El contenedor supera el límite de 8 GiB descomprimidos".into());
-            }
-            // The original path is never used for writing to disk.
-            let mut output = File::create(directory.path().join(index.to_string()))
-                .map_err(|e| e.to_string())?;
-            let copied = io::copy(&mut (&mut entry).take(remaining + 1), &mut output)
-                .map_err(|e| format!("{name}: {e}"))?;
-            remaining = remaining
-                .checked_sub(copied)
+            declared = declared
+                .checked_add(entry.size())
+                .filter(|total| *total <= MAX_EXPANDED)
                 .ok_or("El contenedor supera el límite de 8 GiB descomprimidos")?;
-            if copied != entry.size() {
-                return Err(format!("Tamaño ZIP incorrecto: {name}"));
-            }
+            progress(index, total, &name)?;
         }
-        Ok(Self { directory, entries })
+        Ok(Self {
+            directory,
+            entries,
+            archive: RefCell::new(archive),
+        })
     }
 
+    /// Ruta en disco de la entrada, extrayéndola la primera vez que se pide.
+    /// El nombre original nunca se usa para escribir: el archivo es el índice.
     fn path(&self, name: &str) -> Result<PathBuf, String> {
-        let index = self
+        let index = *self
             .entries
             .get(name)
             .ok_or_else(|| format!("Entrada ausente: {name}"))?;
-        Ok(self.directory.path().join(index.to_string()))
+        let target = self.directory.path().join(index.to_string());
+        if target.exists() {
+            return Ok(target);
+        }
+        let mut archive = self.archive.borrow_mut();
+        let mut entry = archive
+            .by_index(index)
+            .map_err(|e| format!("{name}: {e}"))?;
+        let size = entry.size();
+        let mut output = File::create(&target).map_err(|e| format!("{name}: {e}"))?;
+        let copied = io::copy(&mut (&mut entry).take(size + 1), &mut output)
+            .map_err(|e| format!("{name}: {e}"));
+        let result = match copied {
+            Ok(copied) if copied == size => Ok(()),
+            Ok(_) => Err(format!("Tamaño ZIP incorrecto: {name}")),
+            Err(error) => Err(error),
+        };
+        if let Err(error) = result {
+            drop(output);
+            let _ = fs::remove_file(&target);
+            return Err(error);
+        }
+        Ok(target)
     }
 
     fn json<T: DeserializeOwned>(&self, name: &str) -> Result<T, String> {
         let path = self.path(name)?;
         let file = File::open(path).map_err(|e| format!("{name}: {e}"))?;
         if file.metadata().map_err(|e| e.to_string())?.len() > MAX_JSON {
-            return Err(format!("{name} excede el límite JSON de 32 MiB"));
+            return Err(format!("{name} excede el límite de 128 MiB para un JSON de capas; divide el diseño en archivos más pequeños"));
         }
         serde_json::from_reader(io::BufReader::new(file)).map_err(|e| format!("{name}: {e}"))
     }
@@ -190,7 +215,7 @@ pub struct Document {
 
 impl Document {
     pub fn open(path: &Path) -> Result<Self, String> {
-        Extracted::open(path, |_, _, _| {})?.parse(true, |_| {}, |_| {})
+        Extracted::open(path, |_, _, _| Ok(()))?.parse(true, |_| {}, |_| {})
     }
 
     pub(crate) fn thumbnail(&self) -> Option<Vec<u8>> {

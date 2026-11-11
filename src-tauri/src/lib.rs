@@ -9,9 +9,12 @@ mod commands;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .manage(commands::Cancel::default())
         .invoke_handler(tauri::generate_handler![
             commands::convert_file,
-            commands::reveal_output
+            commands::cancel_conversion,
+            commands::reveal_output,
+            commands::save_log
         ])
         .run(tauri::generate_context!())
         .expect("No se pudo iniciar XD2Figma");

@@ -45,10 +45,19 @@ async function importDesign(design) {
   const created = new Set();
   const masters = new Map();
 
+  // Huella FNV-1a de 64 bits (dos semillas) del subárbol: evita construir cadenas JSON
+  // anidadas enormes al comparar instancias con su componente maestro.
+  function fingerprint(text, seed) {
+    let h = seed;
+    for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+    return h >>> 0;
+  }
+  // Igual que antes, solo cuentan los hijos: el componente y su instancia difieren en tipo y nombre.
   function signature(source) {
-    return JSON.stringify((source.children ?? []).map(child => [
+    const text = JSON.stringify((source.children ?? []).map(child => [
       child.type, child.name, child.visible, child.transform, child.geometry, child.style, signature(child),
     ]));
+    return fingerprint(text, 2166136261).toString(36) + fingerprint(text, 3266489917).toString(36) + ':' + text.length;
   }
   const warn = message => {
     if (warnings.has(message)) return;

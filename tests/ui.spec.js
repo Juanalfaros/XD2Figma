@@ -12,11 +12,13 @@ async function desktop(page, settings = {}) {
       async invoke(command, args) {
         if (command === 'plugin:event|listen') { window.qa.listeners[args.event] = args.handler; return args.handler; }
         if (command === 'plugin:dialog|open') return args.options.directory ? (window.qa.cancelFolder ? null : '/qa/results') : ['/qa/portfolio ui.xd', '/qa/Erothys Dark UI.xd'];
+        if (command === 'cancel_conversion') { window.qa.cancelRequested = true; return; }
         if (command === 'reveal_output') { window.qa.revealed.push(args.path); return; }
         if (command === 'convert_file') {
           window.qa.calls.push({ source: args.source, options: args.options });
           args.progress.onmessage({ percent: 68, phase: 'Mapeando nodos', element: 'Artboard / Máscara', level: 'info' });
           await new Promise(r => setTimeout(r, 500));
+          if (window.qa.cancelRequested) { window.qa.cancelRequested = false; throw 'Conversión cancelada'; }
           if (window.qa.failFirst && window.qa.failures++ === 0) throw 'Recurso de imagen ilegible';
           args.progress.onmessage({ percent: 90, phase: 'Generando .fig', element: '', message: 'Fuente no disponible', level: 'warning' });
           return { outputPath: `/qa/results/${args.source.split('/').pop().replace('.xd', args.options.importPackage ? '.zip' : '.fig')}`, imagesPath: args.options.extractImages ? '/qa/results/images' : null, summary: { artboards: 12, layers: 1284, warnings: ['Fuente no disponible'] } };
@@ -60,19 +62,38 @@ test('canceling destination returns to configuration without starting a conversi
   await expect(page.getByRole('heading', { name: 'Prepara tu conversión.' })).toBeVisible();
 });
 
-test('stop finishes active file and leaves the rest pending; retry recovers failures', async ({ page }) => {
+test('cancel aborts the active file and leaves the whole batch pending', async ({ page }) => {
+  await desktop(page);
+  await page.getByRole('button', { name: 'Seleccionar archivos' }).click();
+  await page.getByRole('button', { name: 'Iniciar conversión' }).click();
+  await page.getByRole('button', { name: 'Cancelar conversión' }).click();
+  await expect(page.getByRole('heading', { name: 'Revisa tu resultado.' })).toBeVisible();
+  expect(await page.evaluate(() => window.qa.calls.length)).toBe(1);
+  await expect(page.getByRole('button', { name: 'Convertir archivo pendiente' })).toHaveCount(2);
+  await expect(page.locator('.badge.done')).toHaveCount(0);
+});
+
+test('retry recovers a failed file', async ({ page }) => {
   await desktop(page, { failFirst: true });
   await page.getByRole('button', { name: 'Seleccionar archivos' }).click();
   await page.getByRole('button', { name: 'Iniciar conversión' }).click();
-  await page.getByRole('button', { name: 'Detener después de este' }).click();
   await expect(page.getByRole('heading', { name: 'Revisa tu resultado.' })).toBeVisible();
-  expect(await page.evaluate(() => window.qa.calls.length)).toBe(1);
   await page.getByRole('button', { name: 'Cerrar registro' }).click();
   await page.getByRole('button', { name: 'Reintentar archivo' }).click();
-  await expect(page.getByRole('heading', { name: 'Revisa tu resultado.' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'portfolio ui.fig' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Convertir archivo pendiente' })).toBeVisible();
-  expect(await page.evaluate(() => window.qa.calls.length)).toBe(2);
+  expect(await page.evaluate(() => window.qa.calls.length)).toBe(3);
+});
+
+test('results history survives a reload and can be cleared', async ({ page }) => {
+  await desktop(page);
+  await page.getByRole('button', { name: 'Seleccionar archivos' }).click();
+  await page.getByRole('button', { name: 'Iniciar conversión' }).click();
+  await expect(page.getByRole('heading', { name: 'Revisa tu resultado.' })).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: /Resultados/ }).click();
+  await expect(page.getByRole('button', { name: /portfolio ui.fig/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Borrar historial' }).click();
+  await expect(page.getByRole('heading', { name: 'Aquí encontrarás tus resultados' })).toBeVisible();
 });
 
 test('preferences persist, output options reach conversion, and narrow light theme fits', async ({ page }) => {

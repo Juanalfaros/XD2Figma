@@ -3,6 +3,32 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 El proyecto sigue [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.6.0] - 2026-11-11
+
+### Añadido
+
+- Cancelación real: **Cancelar conversión** interrumpe el archivo en curso (también durante el recorrido de capas), no deja archivos a medias y devuelve el lote a pendiente.
+- Historial de resultados persistente entre sesiones (hasta 50 entradas) con **Borrar historial**.
+- Exportación del registro de la sesión a un archivo de texto.
+- Herramienta de línea de comandos `xd2figma-cli` para convertir sin la interfaz.
+- Pruebas del parser (rutas peligrosas, contenedores inválidos, modo tolerante y estricto, extracción bajo demanda, cancelación y nombres sin sobrescribir) y de la interfaz (cancelación, reintento e historial).
+- CI con lint, `cargo fmt`, `clippy -D warnings`, todas las pruebas y comprobación del binario de escritorio en cada push y pull request. La publicación de instaladores depende de que pasen.
+- Lint del frontend con oxlint (`pnpm lint`) y `pnpm check`.
+
+### Cambiado
+
+- El XD ya no se descomprime entero al abrirlo: el contenedor se valida y cada entrada se extrae solo cuando se usa, con lo que los recursos que no se emplean nunca tocan el disco.
+- Límite de JSON de capas elevado de 32 a 128 MiB y mensajes de límite más claros.
+- La interfaz se divide en componentes (`src/components`).
+- El importador del plugin calcula las huellas de componentes con un hash en lugar de cadenas JSON anidadas.
+- Descripción del paquete Rust actualizada.
+
+### Corregido
+
+- Un contorno vectorial corrupto ya no provoca un pánico: se informa como advertencia o error.
+- **Mostrar en carpeta** en Windows ya no muestra un error falso (el Explorador devuelve 1 aunque abra) y en Linux acepta carpetas.
+- Se elimina el evento de progreso duplicado que la interfaz nunca escuchaba.
+
 ## [0.5.1] - 2026-11-07
 
 ### Corregido

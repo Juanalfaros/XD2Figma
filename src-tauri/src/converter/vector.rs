@@ -152,7 +152,10 @@ impl VectorNetwork {
         stroked: bool,
     ) -> Result<Vec<usize>, &'static str> {
         if self.vertices[start] == self.vertices[end] {
-            self.segments.last_mut().expect("contour has segments").end = start;
+            self.segments
+                .last_mut()
+                .ok_or("Contorno sin segmentos")?
+                .end = start;
         } else if stroked {
             // An implicit fill edge must not introduce a new visible stroke.
             return Err("Contorno relleno sin cierre explícito");

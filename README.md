@@ -13,9 +13,9 @@ Aplicación de escritorio que convierte archivos Adobe XD en archivos .fig con c
 
 Las versiones y sus instaladores se publican en [GitHub Releases](https://github.com/Juanalfaros/XD2Figma/releases). Cada archivo incluye su suma SHA-256. El workflow de tags `v*` compila macOS Apple Silicon, Windows x64 (MSI y EXE) y Linux x64 (AppImage y DEB). Consulta los archivos adjuntos y el estado de Actions para comprobar cuáles están disponibles en cada versión.
 
-## Instalar XD2Figma 0.6.2 en macOS
+## Instalar XD2Figma 0.6.3 en macOS
 
-Abre `XD2Figma_0.6.2_aarch64.dmg`, disponible en la raíz del proyecto, y arrastra **XD2Figma** a **Aplicaciones**. Si ya tienes instalada una versión anterior, cierra la aplicación antes de reemplazarla. La versión se muestra al pie de la navegación lateral.
+Abre `XD2Figma_0.6.3_aarch64.dmg`, disponible en la raíz del proyecto, y arrastra **XD2Figma** a **Aplicaciones**. Si ya tienes instalada una versión anterior, cierra la aplicación antes de reemplazarla. La versión se muestra al pie de la navegación lateral.
 
 La interfaz implementa la [propuesta 4 — Dashboard guiado](https://www.figma.com/design/ijSjjmuOohgwfYuYrnh5Ev?node-id=8-206). Usa **Conversiones** para seguir los pasos **Importar → Configurar → Convertir → Revisar**. El resumen lateral mantiene visibles el formato, el destino y el estado del lote.
 

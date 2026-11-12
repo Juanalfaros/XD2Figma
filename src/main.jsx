@@ -4,6 +4,7 @@ import { version } from '../package.json';
 import Icon from './Icon';
 import { useConversion, native, basename } from './useConversion';
 import { Button, Badge, number } from './components/common';
+import { Brand } from './components/Brand';
 import { Summary } from './components/Summary';
 import { ImportStep, ConfigureStep, ConvertStep, ReviewStep, ResultDetails, EmptyResults } from './components/steps';
 import { Preferences } from './components/Preferences';
@@ -21,7 +22,7 @@ function App() {
   function changeStep(index) { if (c.busy || index === 2 || (index > 0 && !c.files.length) || (index === 3 && c.step !== 3)) return; c.setStep(index); }
   return <div className={`app-shell ${c.dragging ? 'drag-over' : ''}`}>
     <a className="skip-link" href="#main-content">Saltar al contenido</a>
-    <nav className="navigation" aria-label="Navegación principal"><div className="brand">XD2Figma</div><p className="eyebrow">ESPACIO LOCAL</p><button className={`nav-item ${c.view === 'conversion' ? 'selected' : ''}`} aria-current={c.view === 'conversion' ? 'page' : undefined} onClick={() => c.setView('conversion')}><Icon name="layers"/>Conversiones{c.running && <Icon name="spinner" size={13}/>}</button><button className={`nav-item ${resultsView ? 'selected' : ''}`} aria-current={resultsView ? 'page' : undefined} onClick={() => c.setView('results')}><Icon name="folder"/>Resultados{c.history.length > 0 && <span className="nav-count">{c.history.length}</span>}</button>
+    <nav className="navigation" aria-label="Navegación principal"><Brand/><p className="eyebrow">ESPACIO LOCAL</p><button className={`nav-item ${c.view === 'conversion' ? 'selected' : ''}`} aria-current={c.view === 'conversion' ? 'page' : undefined} onClick={() => c.setView('conversion')}><Icon name="layers"/>Conversiones{c.running && <Icon name="spinner" size={13}/>}</button><button className={`nav-item ${resultsView ? 'selected' : ''}`} aria-current={resultsView ? 'page' : undefined} onClick={() => c.setView('results')}><Icon name="folder"/>Resultados{c.history.length > 0 && <span className="nav-count">{c.history.length}</span>}</button>
       <div className="navigation-bottom"><button className={`nav-item ${preferences ? 'selected' : ''}`} aria-current={preferences ? 'page' : undefined} onClick={() => c.setView('preferences')}><Icon name="settings"/>Preferencias</button><button className="nav-item log-toggle" aria-expanded={c.drawerOpen} onClick={() => c.setDrawerOpen(!c.drawerOpen)}><Icon name="log"/>Registro{c.logs.length > 0 && <span className="nav-count">{c.logs.length}</span>}</button><small>Todo permanece local.</small><span className="version">v{version}</span></div>
     </nav>
     <main id="main-content" className="main-content"><header className="page-header"><div><h1>{title}</h1><p>{preferences ? 'Configura cómo quieres trabajar.' : resultsView ? 'Archivos generados, guardados entre sesiones.' : `Sesión local${c.files.length ? ` · ${c.files.length} ${c.files.length === 1 ? 'archivo' : 'archivos'}` : ''}`}</p></div><Badge><Icon name="shield" size={13}/>Solo en este equipo</Badge></header>

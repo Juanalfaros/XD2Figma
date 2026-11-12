@@ -3,6 +3,17 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 El proyecto sigue [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.6.3] - 2026-11-12
+
+### Añadido
+
+- El logotipo de la marca en la navegación, con la variante del tema activo (claro, oscuro o sistema) y solo el símbolo cuando la ventana es estrecha.
+
+### Cambiado
+
+- Las barras de desplazamiento ya no se ven; el desplazamiento con rueda, trackpad y teclado sigue funcionando.
+- Los recursos del frontend no se incrustan como `data:` para cumplir la política de seguridad de la aplicación.
+
 ## [0.6.2] - 2026-11-12
 
 ### Añadido

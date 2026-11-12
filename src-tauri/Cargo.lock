@@ -4806,7 +4806,7 @@ dependencies = [
 
 [[package]]
 name = "xd2figma"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "figcraft-doc",
  "figcraft-format",

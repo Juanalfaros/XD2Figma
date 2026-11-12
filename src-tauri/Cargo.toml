@@ -1,6 +1,6 @@
 [package]
 name = "xd2figma"
-version = "0.6.1"
+version = "0.6.2"
 edition = "2021"
 description = "Conversor local de Adobe XD a archivos .fig editables de Figma"
 default-run = "xd2figma"

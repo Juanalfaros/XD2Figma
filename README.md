@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/xd2figma-lockup-stacked-color-on-dark.svg">
+    <img src="brand/xd2figma-lockup-stacked-color-on-light.svg" alt="XD2Figma" width="160">
+  </picture>
+</p>
+
 # XD2Figma
 
 Aplicación de escritorio que convierte archivos Adobe XD en archivos .fig con capas editables para Figma Design. También puede generar un paquete para el importador mediante la Plugin API.
@@ -6,15 +13,34 @@ Aplicación de escritorio que convierte archivos Adobe XD en archivos .fig con c
 
 Las versiones y sus instaladores se publican en [GitHub Releases](https://github.com/Juanalfaros/XD2Figma/releases). Cada archivo incluye su suma SHA-256. El workflow de tags `v*` compila macOS Apple Silicon, Windows x64 (MSI y EXE) y Linux x64 (AppImage y DEB). Consulta los archivos adjuntos y el estado de Actions para comprobar cuáles están disponibles en cada versión.
 
-## Instalar XD2Figma 0.6.1 en macOS
+## Instalar XD2Figma 0.6.2 en macOS
 
-Abre `XD2Figma_0.6.1_aarch64.dmg`, disponible en la raíz del proyecto, y arrastra **XD2Figma** a **Aplicaciones**. Si ya tienes instalada una versión anterior, cierra la aplicación antes de reemplazarla. La versión se muestra al pie de la navegación lateral.
+Abre `XD2Figma_0.6.2_aarch64.dmg`, disponible en la raíz del proyecto, y arrastra **XD2Figma** a **Aplicaciones**. Si ya tienes instalada una versión anterior, cierra la aplicación antes de reemplazarla. La versión se muestra al pie de la navegación lateral.
 
 La interfaz implementa la [propuesta 4 — Dashboard guiado](https://www.figma.com/design/ijSjjmuOohgwfYuYrnh5Ev?node-id=8-206). Usa **Conversiones** para seguir los pasos **Importar → Configurar → Convertir → Revisar**. El resumen lateral mantiene visibles el formato, el destino y el estado del lote.
 
 En **Preferencias** puedes elegir **Claro**, **Oscuro** o **Sistema**, además del formato y las opciones de conversión. La aplicación recuerda estos ajustes y la carpeta de destino. El tema oscuro es el predeterminado en instalaciones nuevas. La tipografía Inter se incluye localmente bajo su licencia OFL.
 
 **Resultados** conserva los últimos 50 archivos completados, incluso después de cerrar la app; **Borrar historial** lo vacía. **Registro** muestra los avisos de la sesión y permite exportarlos a un archivo de texto. Los originales no se modifican.
+
+## Identidad de marca
+
+Los logotipos están en [`brand/`](brand/) como SVG con los textos convertidos a trazados. El nombre sigue `xd2figma-{tipo}-{estilo}-{fondo}`: **`on-light`** es para fondos claros (texto y chevron negros), **`on-dark`** para fondos oscuros (blancos), **`color`** usa el morado `#a259ff` y **`mono`** solo negro y blanco.
+
+| Tipo | Archivos |
+|---|---|
+| Símbolo | `xd2figma-symbol-{color,mono}-{on-light,on-dark}.svg` |
+| Logotipo vertical | `xd2figma-lockup-stacked-{color,mono}-{on-light,on-dark}.svg` |
+| Logotipo horizontal | `xd2figma-lockup-horizontal-{color,mono}-{on-light,on-dark}.svg` |
+| Ícono cuadrado | `xd2figma-icon-{purple,color-black,color-white,mono-black,mono-white}.svg` |
+| Ícono de la app | `xd2figma-app-icon.svg` (cuadrado redondeado con margen, formato macOS) |
+
+El ícono de la aplicación sale de `brand/xd2figma-app-icon.svg`. Para regenerar `src-tauri/icons/` tras cambiarlo:
+
+```sh
+pnpm tauri icon brand/xd2figma-app-icon.svg -o /tmp/iconos
+cp /tmp/iconos/icon.png /tmp/iconos/icon.icns /tmp/iconos/icon.ico src-tauri/icons/
+```
 
 ## Desarrollo
 

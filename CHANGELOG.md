@@ -3,6 +3,17 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 El proyecto sigue [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.6.2] - 2026-11-12
+
+### Añadido
+
+- Identidad de marca en `brand/`: símbolo, logotipos vertical y horizontal (color y monocromo, para fondos claros y oscuros) e íconos cuadrados, con una convención de nombres documentada.
+- Logo en el encabezado del README, con variante para tema oscuro.
+
+### Cambiado
+
+- Nuevo ícono de la aplicación (macOS, Windows y Linux) generado desde `brand/xd2figma-app-icon.svg`.
+
 ## [0.6.1] - 2026-11-11
 
 ### Cambiado

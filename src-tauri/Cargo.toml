@@ -1,6 +1,6 @@
 [package]
 name = "xd2figma"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2021"
 description = "Conversor local de Adobe XD a archivos .fig editables de Figma"
 default-run = "xd2figma"
@@ -24,8 +24,8 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
-figcraft-doc = { git = "https://github.com/storytold/figcraft.git", rev = "8eb0b87646c5aef712326d6c431ccde5408630de" }
-figcraft-format = { git = "https://github.com/storytold/figcraft.git", rev = "8eb0b87646c5aef712326d6c431ccde5408630de" }
+figcraft-doc = { git = "https://github.com/Juanalfaros/figcraft.git", rev = "8eb0b87646c5aef712326d6c431ccde5408630de" }
+figcraft-format = { git = "https://github.com/Juanalfaros/figcraft.git", rev = "8eb0b87646c5aef712326d6c431ccde5408630de" }
 svgtypes = "0.16"
 fontdb = "0.23"
 serde = { version = "1", features = ["derive"] }

@@ -3,6 +3,13 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 El proyecto sigue [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.6.1] - 2026-11-11
+
+### Cambiado
+
+- El escritor `.fig` (FigCraft) se obtiene de un fork propio, `Juanalfaros/figcraft`, fijado al mismo commit, para que la compilación no dependa del repositorio original.
+- La documentación de distribución indica que los instaladores no se firman y cómo abrirlos.
+
 ## [0.6.0] - 2026-11-11
 
 ### Añadido

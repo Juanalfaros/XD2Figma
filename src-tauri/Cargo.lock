@@ -884,7 +884,7 @@ dependencies = [
 [[package]]
 name = "figcraft-color"
 version = "0.15.0"
-source = "git+https://github.com/storytold/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
+source = "git+https://github.com/Juanalfaros/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
 dependencies = [
  "kurbo",
  "serde",
@@ -893,7 +893,7 @@ dependencies = [
 [[package]]
 name = "figcraft-doc"
 version = "0.15.0"
-source = "git+https://github.com/storytold/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
+source = "git+https://github.com/Juanalfaros/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
 dependencies = [
  "figcraft-color",
  "figcraft-geom",
@@ -907,7 +907,7 @@ dependencies = [
 [[package]]
 name = "figcraft-format"
 version = "0.15.0"
-source = "git+https://github.com/storytold/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
+source = "git+https://github.com/Juanalfaros/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
 dependencies = [
  "figcraft-doc",
  "figcraft-layout",
@@ -925,7 +925,7 @@ dependencies = [
 [[package]]
 name = "figcraft-geom"
 version = "0.15.0"
-source = "git+https://github.com/storytold/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
+source = "git+https://github.com/Juanalfaros/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
 dependencies = [
  "kurbo",
  "serde",
@@ -934,7 +934,7 @@ dependencies = [
 [[package]]
 name = "figcraft-layout"
 version = "0.15.0"
-source = "git+https://github.com/storytold/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
+source = "git+https://github.com/Juanalfaros/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
 dependencies = [
  "figcraft-doc",
  "figcraft-geom",
@@ -943,7 +943,7 @@ dependencies = [
 [[package]]
 name = "figcraft-pathops"
 version = "0.15.0"
-source = "git+https://github.com/storytold/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
+source = "git+https://github.com/Juanalfaros/figcraft.git?rev=8eb0b87646c5aef712326d6c431ccde5408630de#8eb0b87646c5aef712326d6c431ccde5408630de"
 dependencies = [
  "figcraft-doc",
  "figcraft-geom",
@@ -4806,7 +4806,7 @@ dependencies = [
 
 [[package]]
 name = "xd2figma"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "figcraft-doc",
  "figcraft-format",
